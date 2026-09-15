@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageSpinner } from "@/components/shared/Spinner"
-import { formatDate, daysSince } from "@/lib/utils"
+import { formatDate, daysSince, parseFlexDate } from "@/lib/utils"
 import { Upload, ChevronDown, ChevronRight, Archive } from "lucide-react"
 import { STATUS_OPTIONS, HEALTH_OPTIONS, FEEDBACK_STATUS } from "@/constants"
 import { useKAMNames } from "@/hooks/useKAMNames"
@@ -59,7 +59,7 @@ export default function AdminClientsView() {
       if (filterFeedback !== "All" && c.feedbackStatus !== filterFeedback) return false
       if (search && !c.company.toLowerCase().includes(search.toLowerCase())) return false
       if (startDateFrom || startDateTo) {
-        const d = c.startDate ? new Date(c.startDate) : null
+        const d = parseFlexDate(c.startDate)
         if (!d || isNaN(d.getTime())) return false
         if (startDateFrom && d < new Date(startDateFrom)) return false
         if (startDateTo && d > new Date(startDateTo + "T23:59:59")) return false
