@@ -19,7 +19,7 @@ import type { Client } from "@/types/client"
 const ARCHIVED_STATUSES = ["Closed", "Uncountable"]
 
 const DATE_PRESETS: { label: string; days: number | null }[] = [
-  { label: "All", days: null },
+  { label: "All Dates", days: null },
   { label: "Past 30 days", days: 30 },
   { label: "Past 60 days", days: 60 },
   { label: "Past 90 days", days: 90 },
@@ -41,7 +41,7 @@ export default function AdminClientsView() {
   const [filterFeedback, setFilterFeedback] = useState("All")
   const [startDateFrom, setStartDateFrom] = useState("")
   const [startDateTo, setStartDateTo] = useState("")
-  const [datePreset, setDatePreset] = useState("All")
+  const [datePreset, setDatePreset] = useState("All Dates")
   const [search, setSearch] = useState("")
   const [guidanceTarget, setGuidanceTarget] = useState<Client | null>(null)
   const [feedbackTarget, setFeedbackTarget] = useState<Client | null>(null)
