@@ -118,13 +118,19 @@ export default function AdminClientsView() {
               {DATE_PRESETS.map((p) => <SelectItem key={p.label} value={p.label}>{p.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          {datePreset === "Custom" && (
-            <>
-              <Input type="date" value={startDateFrom} onChange={(e) => setStartDateFrom(e.target.value)} className="h-8 w-36 text-xs" />
-              <span className="text-xs text-slate-400">to</span>
-              <Input type="date" value={startDateTo} onChange={(e) => setStartDateTo(e.target.value)} className="h-8 w-36 text-xs" />
-            </>
-          )}
+          <Input
+            type="date"
+            value={startDateFrom}
+            onChange={(e) => { setStartDateFrom(e.target.value); setDatePreset("Custom") }}
+            className="h-8 w-36 text-xs"
+          />
+          <span className="text-xs text-slate-400">to</span>
+          <Input
+            type="date"
+            value={startDateTo}
+            onChange={(e) => { setStartDateTo(e.target.value); setDatePreset("Custom") }}
+            className="h-8 w-36 text-xs"
+          />
         </div>
         <div className="text-xs text-slate-400 self-center ml-auto">{filtered.length} clients</div>
       </div>
