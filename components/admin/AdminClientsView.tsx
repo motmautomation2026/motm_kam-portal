@@ -61,7 +61,7 @@ export default function AdminClientsView() {
       if (startDateFrom || startDateTo) {
         const d = parseFlexDate(c.startDate)
         if (!d || isNaN(d.getTime())) return false
-        if (startDateFrom && d < new Date(startDateFrom)) return false
+        if (startDateFrom && d < new Date(startDateFrom + "T00:00:00")) return false
         if (startDateTo && d > new Date(startDateTo + "T23:59:59")) return false
       }
       return true
