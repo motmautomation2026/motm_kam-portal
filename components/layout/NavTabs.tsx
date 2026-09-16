@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 const KAM_TABS = [
   { label: "My Clients", href: "/dashboard" },
+  { label: "Overview", href: "/dashboard/overview" },
   { label: "Feedback", href: "/dashboard/feedback" },
   { label: "Meetings", href: "/dashboard/meetings" },
   { label: "Tasks", href: "/dashboard/tasks" },
@@ -27,12 +28,14 @@ const ADMIN_TABS = [
 
 const SE_TABS = [
   { label: "My Dashboard", href: "/dashboard/se" },
+  { label: "Overview", href: "/dashboard/overview" },
   { label: "Tasks", href: "/dashboard/tasks" },
   { label: "Enquiries", href: "/dashboard/enquiries" },
 ]
 
 const DR_TABS = [
   { label: "My Dashboard", href: "/dashboard/dr" },
+  { label: "Overview", href: "/dashboard/overview" },
   { label: "Tasks", href: "/dashboard/tasks" },
 ]
 
