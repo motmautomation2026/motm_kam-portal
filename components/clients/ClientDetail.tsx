@@ -10,11 +10,12 @@ import { HealthDot } from "@/components/shared/HealthDot"
 import { HealthBadge, FeedbackBadge, ClientStatusBadge } from "@/components/shared/StatusBadge"
 import { LogFeedbackModal } from "@/components/shared/LogFeedbackModal"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { formatDate, daysSince, parseFlexDate, cn } from "@/lib/utils"
-import { RESOLUTION_STATUS_OPTIONS, STATUS_OPTIONS } from "@/constants"
+import { RESOLUTION_STATUS_OPTIONS, STATUS_OPTIONS, HEALTH_OPTIONS, FEEDBACK_STATUS } from "@/constants"
 import type { FeedbackEntry } from "@/types/feedback"
 import type { Enquiry } from "@/types/guidance"
 import { ExternalLink, MessageSquare, CalendarPlus, FileText, Star, ChevronDown, ChevronUp, Plus, Activity, Pencil } from "lucide-react"
@@ -30,6 +31,16 @@ export function ClientDetail({ client, onUpdated }: Props) {
   const { data: session } = useSession()
   const canChangeStatus = session?.user?.role === "Admin" || session?.user?.role === "KAM"
   const updateClient = useUpdateClient()
+  const [form, setForm] = useState({
+    status: client.status,
+    health: client.health,
+    feedbackStatus: client.feedbackStatus,
+    nextFollowup: client.nextFollowup,
+    lastFeedbackDate: client.lastFeedbackDate,
+    kamNotes: client.kamNotes,
+  })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [showMOM, setShowMOM] = useState(false)
   const [showTimeline, setShowTimeline] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
@@ -126,6 +137,18 @@ export function ClientDetail({ client, onUpdated }: Props) {
     onUpdated({ ...client, status })
   }
 
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await updateClient.mutateAsync({ id: client.clientId, ...form })
+      setSaved(true)
+      onUpdated({ ...client, ...form })
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="p-5 space-y-4">
       {/* Header */}
@@ -169,6 +192,63 @@ export function ClientDetail({ client, onUpdated }: Props) {
           ) : (
             <div className="text-sm font-medium text-slate-700">{client.status}</div>
           )}
+        </div>
+      </div>
+
+      {/* Quick Update */}
+      <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-slate-50">
+        <h3 className="text-sm font-semibold text-slate-700">Quick Update</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Status</Label>
+            <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Health</Label>
+            <Select value={form.health} onValueChange={(v) => setForm((f) => ({ ...f, health: v }))}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {HEALTH_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Feedback Status</Label>
+            <Select value={form.feedbackStatus} onValueChange={(v) => setForm((f) => ({ ...f, feedbackStatus: v }))}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FEEDBACK_STATUS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Next Follow-up</Label>
+            <input
+              type="date"
+              value={form.nextFollowup}
+              onChange={(e) => setForm((f) => ({ ...f, nextFollowup: e.target.value }))}
+              className="flex h-8 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e3a5f]"
+            />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">KAM Notes</Label>
+          <Textarea
+            value={form.kamNotes}
+            onChange={(e) => setForm((f) => ({ ...f, kamNotes: e.target.value }))}
+            className="min-h-[60px] text-xs"
+            placeholder="Internal notes..."
+          />
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : saved ? "Saved ✓" : "Save"}
+          </Button>
         </div>
       </div>
 
