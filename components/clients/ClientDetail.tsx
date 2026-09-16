@@ -7,8 +7,7 @@ import { useTasks } from "@/hooks/useTasks"
 import { useUpdateClient } from "@/hooks/useClients"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { HealthDot } from "@/components/shared/HealthDot"
-import { HealthBadge, FeedbackBadge, ClientStatusBadge, clientStatusVariant } from "@/components/shared/StatusBadge"
-import { badgeVariants } from "@/components/ui/badge"
+import { HealthBadge, FeedbackBadge, ClientStatusBadge } from "@/components/shared/StatusBadge"
 import { LogFeedbackModal } from "@/components/shared/LogFeedbackModal"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -138,23 +137,7 @@ export function ClientDetail({ client, onUpdated }: Props) {
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant="gray">{client.clientId}</Badge>
           {client.industry && <Badge variant="gray">{client.industry}</Badge>}
-          {canChangeStatus ? (
-            <Select value={client.status} onValueChange={handleStatusChange}>
-              <SelectTrigger
-                className={cn(
-                  badgeVariants({ variant: clientStatusVariant(client.status) }),
-                  "h-auto w-auto gap-1 border-none shadow-none cursor-pointer [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70",
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          ) : (
-            <ClientStatusBadge status={client.status} />
-          )}
+          <ClientStatusBadge status={client.status} />
           <HealthBadge health={client.health} />
           <FeedbackBadge status={client.feedbackStatus} />
           {client.overdue === "YES" && <Badge variant="red">Overdue</Badge>}
@@ -172,6 +155,21 @@ export function ClientDetail({ client, onUpdated }: Props) {
         <InfoCell label="Days Since" value={days !== null ? `${days}d` : "—"} highlight={days !== null && days > 7} />
         <InfoCell label="Next Follow-up" value={formatDate(client.nextFollowup)} />
         <InfoCell label="Enquiries (since 29 Jun 2026)" value={String(enquiriesSince)} />
+        <div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide">Status</div>
+          {canChangeStatus ? (
+            <Select value={client.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="h-7 w-auto min-w-[9rem] text-xs mt-0.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="text-sm font-medium text-slate-700">{client.status}</div>
+          )}
+        </div>
       </div>
 
       {/* Log Feedback */}
