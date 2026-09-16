@@ -294,7 +294,7 @@ function AssignCell({
     return (
       <Select defaultOpen value={value} onValueChange={onChange} onOpenChange={(open) => { if (!open) onCancel() }}>
         <SelectTrigger className="h-7 w-36 text-xs"><SelectValue placeholder="Select..." /></SelectTrigger>
-        <SelectContent className="max-h-[11rem] overflow-y-auto scrollbar-visible">
+        <SelectContent position="item-aligned" className="max-h-[11rem] overflow-y-auto scrollbar-visible">
           {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
         </SelectContent>
       </Select>
