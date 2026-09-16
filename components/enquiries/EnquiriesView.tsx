@@ -68,6 +68,9 @@ export default function EnquiriesView() {
               {STATUS_LIST.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
+          <span className="text-xs text-slate-400 whitespace-nowrap">
+            {filtered.length}/{enquiries?.length ?? 0}
+          </span>
         </div>
       </div>
 
