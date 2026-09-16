@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
-import MyClientsView from "@/components/clients/MyClientsView"
+import KamDashboard from "@/components/admin/KamDashboard"
 
 export default async function AdminKamDashboardPage({ params }: { params: Promise<{ kam: string }> }) {
   const { kam } = await params
@@ -14,7 +14,7 @@ export default async function AdminKamDashboardPage({ params }: { params: Promis
         </Link>
       </div>
       <h1 className="text-xl font-bold text-[#1e3a5f]">{kamName}'s Dashboard</h1>
-      <MyClientsView kamName={kamName} />
+      <KamDashboard kamName={kamName} />
     </div>
   )
 }
