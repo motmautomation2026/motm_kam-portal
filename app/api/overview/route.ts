@@ -2,12 +2,13 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getSheetValues } from "@/lib/sheets"
-import { parseClient } from "@/lib/sheets-helpers"
-import { SHEET_ID, SHEETS } from "@/constants"
-import { daysSince } from "@/lib/utils"
+import { parseClient, parseEnquiry } from "@/lib/sheets-helpers"
+import { SHEET_ID, ENQUIRY_SHEET_ID, SHEETS, COLS } from "@/constants"
+import { daysSince, parseFlexDate } from "@/lib/utils"
 
 const INACTIVE = ["Closed", "On Hold", "Uncountable"]
 const ONBOARDING = ["New", "Pending"]
+const ENQUIRIES_SINCE = new Date(2026, 5, 29) // 29 Jun 2026
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -68,7 +69,45 @@ export async function GET() {
         .map((c) => ({ clientId: c.clientId, company: c.company, kam: c.kam })),
     })).filter((g) => g.clients.length > 0)
 
-    return NextResponse.json({ stats, criticalClients, otherClients, onboardingClients })
+    let enquiriesSince: number | null = null
+    if (session.user.role !== "DR") {
+      const [enquiryRows, userRows] = await Promise.all([
+        getSheetValues(ENQUIRY_SHEET_ID, "Form responses 1"),
+        getSheetValues(SHEET_ID, SHEETS.USERS).catch(() => [] as string[][]),
+      ])
+
+      const seByEmail: Record<string, string> = {}
+      userRows.slice(1).forEach((r) => {
+        const email = (r[COLS.USER.EMAIL] ?? "").toLowerCase().trim()
+        const role = (r[COLS.USER.ROLE] ?? "").trim()
+        const name = (r[COLS.USER.FULL_NAME] ?? "").trim()
+        if ((role === "SE" || role === "DR") && email && name) seByEmail[email] = name
+      })
+
+      let enquiries = enquiryRows.slice(1)
+        .filter((row) => row[COLS.ENQUIRY.CLIENT_CODE])
+        .map((row) => {
+          const key = `${row[COLS.ENQUIRY.CLIENT_CODE]}-${row[COLS.ENQUIRY.TIMESTAMP]}`
+          const base = parseEnquiry(row, key)
+          const seEmail = (row[COLS.ENQUIRY.EMAIL] ?? "").toLowerCase().trim()
+          return { ...base, seName: seByEmail[seEmail] || seEmail }
+        })
+
+      if (session.user.role === "SE") {
+        const seName = (session.user.fullName ?? "").trim().toLowerCase()
+        enquiries = enquiries.filter((e) => (e.seName ?? "").trim().toLowerCase() === seName)
+      } else if (session.user.role !== "Admin") {
+        const kamName = (session.user.kamName ?? "").trim().toLowerCase()
+        enquiries = enquiries.filter((e) => (e.teamName ?? "").trim().toLowerCase() === kamName)
+      }
+
+      enquiriesSince = enquiries.filter((e) => {
+        const d = parseFlexDate(e.enquiryDate)
+        return d !== null && d >= ENQUIRIES_SINCE
+      }).length
+    }
+
+    return NextResponse.json({ stats, criticalClients, otherClients, onboardingClients, enquiriesSince })
   } catch (err) {
     console.error("[overview GET]", err)
     return NextResponse.json({ error: "Failed to load overview" }, { status: 500 })

@@ -27,6 +27,7 @@ interface OverviewData {
   otherClients: Array<{ status: string; clients: Array<{ clientId: string; company: string; kam: string }> }>
   onboardingClients: Array<{ status: string; clients: Array<{ clientId: string; company: string; kam: string }> }>
   unassignedClients: Array<{ clientId: string; company: string; status: string }>
+  enquiriesSince: number
 }
 
 export default function AdminOverview() {
@@ -50,7 +51,7 @@ export default function AdminOverview() {
     </div>
   )
 
-  const { stats, kamBreakdown, criticalClients, otherClients = [], onboardingClients = [], unassignedClients = [] } = data
+  const { stats, kamBreakdown, criticalClients, otherClients = [], onboardingClients = [], unassignedClients = [], enquiriesSince } = data
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -66,6 +67,7 @@ export default function AdminOverview() {
         <StatCard label="Intent to Leave" value={stats.intentToLeave} danger onClick={() => openFilter("Intent to Leave", (c) => !INACTIVE.includes(c.status) && c.feedbackStatus === "Intent to Leave")} />
         <StatCard label="Overdue Follow-up" value={stats.overdueFollowup} warn={stats.overdueFollowup > 0} onClick={() => openFilter("Overdue Follow-up (>7 days)", (c) => { const d = daysSince(c.lastFeedbackDate); return d !== null && d > 7 && !INACTIVE.includes(c.status) })} />
         <StatCard label="Month Revenue" value={`₹${(stats.monthRevenue / 100000).toFixed(1)}L`} />
+        <StatCard label="Enquiries (since 29 Jun 2026)" value={enquiriesSince} />
       </div>
 
       {/* KAM Breakdown */}

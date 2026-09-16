@@ -19,6 +19,7 @@ interface OverviewData {
   criticalClients: Array<{ clientId: string; company: string; kam: string; health: string; feedbackStatus: string; lastFeedbackDate: string; daysSince: number | null }>
   otherClients: Array<{ status: string; clients: Array<{ clientId: string; company: string; kam: string }> }>
   onboardingClients: Array<{ status: string; clients: Array<{ clientId: string; company: string; kam: string }> }>
+  enquiriesSince: number | null
 }
 
 export default function MyOverview({ title = "Overview" }: { title?: string }) {
@@ -41,7 +42,7 @@ export default function MyOverview({ title = "Overview" }: { title?: string }) {
     </div>
   )
 
-  const { stats, criticalClients, otherClients = [], onboardingClients = [] } = data
+  const { stats, criticalClients, otherClients = [], onboardingClients = [], enquiriesSince } = data
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -57,6 +58,9 @@ export default function MyOverview({ title = "Overview" }: { title?: string }) {
         <StatCard label="Intent to Leave" value={stats.intentToLeave} danger onClick={() => openFilter("Intent to Leave", (c) => c.feedbackStatus === "Intent to Leave")} />
         <StatCard label="Overdue Follow-up" value={stats.overdueFollowup} warn={stats.overdueFollowup > 0} onClick={() => openFilter("Overdue Follow-up (>7 days)", (c) => { const d = daysSince(c.lastFeedbackDate); return d !== null && d > 7 })} />
         <StatCard label="Month Revenue" value={`₹${(stats.monthRevenue / 100000).toFixed(1)}L`} />
+        {enquiriesSince !== null && (
+          <StatCard label="Enquiries (since 29 Jun 2026)" value={enquiriesSince} />
+        )}
       </div>
 
       {/* Critical Clients */}

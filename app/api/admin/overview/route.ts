@@ -2,10 +2,12 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getSheetValues } from "@/lib/sheets"
-import { parseClient, parseMeeting, parseTask } from "@/lib/sheets-helpers"
-import { SHEET_ID, SHEETS } from "@/constants"
-import { daysSince } from "@/lib/utils"
+import { parseClient, parseMeeting, parseTask, parseEnquiry } from "@/lib/sheets-helpers"
+import { SHEET_ID, ENQUIRY_SHEET_ID, SHEETS, COLS } from "@/constants"
+import { daysSince, parseFlexDate } from "@/lib/utils"
 import { getKAMNames } from "@/lib/getKAMNames"
+
+const ENQUIRIES_SINCE = new Date(2026, 5, 29) // 29 Jun 2026
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -90,7 +92,16 @@ export async function GET() {
       .filter((c) => !c.kam || c.kam.trim() === "")
       .map((c) => ({ clientId: c.clientId, company: c.company, status: c.status }))
 
-    return NextResponse.json({ stats, kamBreakdown, criticalClients, otherClients, onboardingClients, unassignedClients })
+    const enquiryRows = await getSheetValues(ENQUIRY_SHEET_ID, "Form responses 1")
+    const enquiriesSince = enquiryRows.slice(1)
+      .filter((row) => row[COLS.ENQUIRY.CLIENT_CODE])
+      .map((row) => parseEnquiry(row, ""))
+      .filter((e) => {
+        const d = parseFlexDate(e.enquiryDate)
+        return d !== null && d >= ENQUIRIES_SINCE
+      }).length
+
+    return NextResponse.json({ stats, kamBreakdown, criticalClients, otherClients, onboardingClients, unassignedClients, enquiriesSince })
   } catch (err) {
     console.error("[admin/overview GET]", err)
     return NextResponse.json({ error: "Failed to load overview" }, { status: 500 })
