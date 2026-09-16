@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PageSpinner } from "@/components/shared/Spinner"
@@ -21,6 +22,7 @@ const statusVariant = (s?: string) => {
 export default function EnquiriesView() {
   const qc = useQueryClient()
   const [statusFilter, setStatusFilter] = useState("All")
+  const [search, setSearch] = useState("")
   const [detail, setDetail] = useState<Enquiry | null>(null)
 
   const { data: enquiries, isLoading } = useQuery<Enquiry[]>({
@@ -37,21 +39,36 @@ export default function EnquiriesView() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["enquiries"] }),
   })
 
-  const filtered = enquiries?.filter((e) => statusFilter === "All" || e.status === statusFilter) ?? []
+  const filtered = enquiries?.filter((e) => {
+    if (statusFilter !== "All" && e.status !== statusFilter) return false
+    if (search) {
+      const q = search.toLowerCase()
+      if (!e.company.toLowerCase().includes(q) && !e.clientCode.toLowerCase().includes(q)) return false
+    }
+    return true
+  }) ?? []
 
   if (isLoading) return <PageSpinner />
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl font-bold text-[#1e3a5f]">Enquiries</h1>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Status</SelectItem>
-            {STATUS_LIST.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search company or ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-48"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Status</SelectItem>
+              {STATUS_LIST.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
