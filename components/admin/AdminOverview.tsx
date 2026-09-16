@@ -5,7 +5,7 @@ import { FeedbackBadge, HealthBadge } from "@/components/shared/StatusBadge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PageSpinner } from "@/components/shared/Spinner"
-import { formatDate, daysSince } from "@/lib/utils"
+import { formatDate, daysSince, parseFlexDate } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
@@ -14,8 +14,10 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { FeedbackHistoryModal } from "@/components/shared/FeedbackHistoryModal"
 import { useClients } from "@/hooks/useClients"
 import type { Client } from "@/types/client"
+import type { Enquiry } from "@/types/guidance"
 
 const INACTIVE = ["Closed", "On Hold", "Uncountable"]
+const ENQUIRIES_SINCE = new Date(2026, 5, 29) // 29 Jun 2026
 
 interface OverviewData {
   stats: {
@@ -38,6 +40,7 @@ export default function AdminOverview() {
   const [guidanceClient, setGuidanceClient] = useState<{ clientId: string; company: string; kam: string } | null>(null)
   const [feedbackClient, setFeedbackClient] = useState<{ clientId: string; company: string } | null>(null)
   const [clientFilter, setClientFilter] = useState<{ title: string; fn: (c: Client) => boolean } | null>(null)
+  const [showEnquiries, setShowEnquiries] = useState(false)
   const [open, setOpen] = useState({ kam: false, critical: false, onboarding: false, unassigned: false, other: false })
   const toggle = (key: keyof typeof open) => setOpen((s) => ({ ...s, [key]: !s[key] }))
 
@@ -67,7 +70,7 @@ export default function AdminOverview() {
         <StatCard label="Intent to Leave" value={stats.intentToLeave} danger onClick={() => openFilter("Intent to Leave", (c) => !INACTIVE.includes(c.status) && c.feedbackStatus === "Intent to Leave")} />
         <StatCard label="Overdue Follow-up" value={stats.overdueFollowup} warn={stats.overdueFollowup > 0} onClick={() => openFilter("Overdue Follow-up (>7 days)", (c) => { const d = daysSince(c.lastFeedbackDate); return d !== null && d > 7 && !INACTIVE.includes(c.status) })} />
         <StatCard label="Month Revenue" value={`₹${(stats.monthRevenue / 100000).toFixed(1)}L`} />
-        <StatCard label="Enquiries (since 29 Jun 2026)" value={enquiriesSince} />
+        <StatCard label="Enquiries (since 29 Jun 2026)" value={enquiriesSince} onClick={() => setShowEnquiries(true)} />
       </div>
 
       {/* KAM Breakdown */}
@@ -262,6 +265,7 @@ export default function AdminOverview() {
           onClose={() => setClientFilter(null)}
         />
       )}
+      {showEnquiries && <EnquiriesModal onClose={() => setShowEnquiries(false)} />}
     </div>
   )
 }
@@ -342,6 +346,52 @@ function FilteredClientsModal({ title, fn, onClose }: { title: string; fn: (c: C
         />
       )}
     </>
+  )
+}
+
+function EnquiriesModal({ onClose }: { onClose: () => void }) {
+  const { data: allEnquiries = [], isLoading } = useQuery<Enquiry[]>({
+    queryKey: ["enquiries"],
+    queryFn: () => fetch("/api/enquiries").then((r) => r.json()),
+  })
+  const enquiries = allEnquiries.filter((e) => {
+    const d = parseFlexDate(e.enquiryDate)
+    return d !== null && d >= ENQUIRIES_SINCE
+  })
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Enquiries since 29 Jun 2026 <span className="text-slate-400 font-normal text-sm">({enquiries.length})</span></DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[65vh] overflow-y-auto">
+          {isLoading && <div className="text-sm text-slate-400 py-6 text-center">Loading...</div>}
+          {!isLoading && enquiries.length === 0 && <div className="text-sm text-slate-400 py-6 text-center">No enquiries found.</div>}
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
+              <tr>
+                {["Date", "Company", "KAM/SE", "Person", "Type", "Status"].map((h) => (
+                  <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {enquiries.map((e) => (
+                <tr key={e.key} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="px-3 py-2 text-xs text-slate-500 whitespace-nowrap">{formatDate(e.enquiryDate || e.timestamp)}</td>
+                  <td className="px-3 py-2 font-medium text-slate-800">{e.company}</td>
+                  <td className="px-3 py-2 text-xs text-slate-600">{e.seName || e.teamName || "—"}</td>
+                  <td className="px-3 py-2 text-xs text-slate-700">{e.personName}</td>
+                  <td className="px-3 py-2 text-xs text-slate-500">{e.enquiryType}</td>
+                  <td className="px-3 py-2"><Badge variant="gray">{e.status ?? "New"}</Badge></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
