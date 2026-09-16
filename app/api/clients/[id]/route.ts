@@ -31,6 +31,10 @@ export async function PATCH(
   if (session.user.role !== "Admin" && client.kam !== session.user.kamName) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
+  // Reassigning the KAM or SE on a client is Admin-only
+  if ((body.kam !== undefined || body.se !== undefined) && session.user.role !== "Admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
 
   const c = COLS.CLIENT
   const updates: Array<{ range: string; values: unknown[][] }> = []
@@ -42,6 +46,8 @@ export async function PATCH(
     nextFollowup: c.NEXT_FOLLOWUP + 1,
     lastFeedbackDate: c.LAST_FEEDBACK_DATE + 1,
     kamNotes: c.KAM_NOTES + 1,
+    kam: c.KAM + 1,
+    se: c.SE + 1,
   }
 
   for (const [key, col] of Object.entries(map)) {

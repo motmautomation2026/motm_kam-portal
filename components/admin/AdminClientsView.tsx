@@ -1,16 +1,17 @@
 "use client"
 // trigger redeploy
 import { useState, useMemo } from "react"
-import { useClients, useArchivedClients } from "@/hooks/useClients"
+import { useClients, useArchivedClients, useUpdateClient } from "@/hooks/useClients"
 import { HealthBadge, FeedbackBadge, ClientStatusBadge } from "@/components/shared/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageSpinner } from "@/components/shared/Spinner"
 import { formatDate, daysSince, parseFlexDate } from "@/lib/utils"
-import { Upload, ChevronDown, ChevronRight, Archive } from "lucide-react"
+import { Upload, ChevronDown, ChevronRight, Archive, Pencil } from "lucide-react"
 import { STATUS_OPTIONS, HEALTH_OPTIONS, FEEDBACK_STATUS } from "@/constants"
 import { useKAMNames } from "@/hooks/useKAMNames"
+import { useSENames } from "@/hooks/useSENames"
 import { GuidanceModal } from "./AdminOverview"
 import BulkImportModal from "./BulkImportModal"
 import { FeedbackHistoryModal } from "@/components/shared/FeedbackHistoryModal"
@@ -35,6 +36,9 @@ export default function AdminClientsView() {
   const { data: clients, isLoading } = useClients()
   const { data: archivedClients = [] } = useArchivedClients()
   const { data: kamNames = [] } = useKAMNames()
+  const { data: seNames = [] } = useSENames()
+  const updateClient = useUpdateClient()
+  const [editingCell, setEditingCell] = useState<{ clientId: string; field: "kam" | "se" } | null>(null)
   const [filterKam, setFilterKam] = useState("All")
   const [filterStatus, setFilterStatus] = useState("All")
   const [filterHealth, setFilterHealth] = useState("All")
@@ -90,6 +94,11 @@ export default function AdminClientsView() {
     from.setDate(from.getDate() - preset.days)
     setStartDateFrom(toDateInputValue(from))
     setStartDateTo(toDateInputValue(to))
+  }
+
+  const handleAssignChange = async (clientId: string, field: "kam" | "se", value: string) => {
+    await updateClient.mutateAsync({ id: clientId, [field]: value })
+    setEditingCell(null)
   }
 
   if (isLoading) return <PageSpinner />
@@ -158,8 +167,26 @@ export default function AdminClientsView() {
                         <div className="text-[10px] text-slate-400">{c.clientId}</div>
                       </button>
                     </td>
-                    <td className="px-3 py-2.5 text-slate-600">{c.kam}</td>
-                    <td className="px-3 py-2.5 text-slate-600 text-xs">{c.se || "—"}</td>
+                    <td className="px-3 py-2.5 text-slate-600">
+                      <AssignCell
+                        value={c.kam}
+                        options={kamNames}
+                        editing={editingCell?.clientId === c.clientId && editingCell.field === "kam"}
+                        onEdit={() => setEditingCell({ clientId: c.clientId, field: "kam" })}
+                        onCancel={() => setEditingCell(null)}
+                        onChange={(v) => handleAssignChange(c.clientId, "kam", v)}
+                      />
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-600 text-xs">
+                      <AssignCell
+                        value={c.se}
+                        options={seNames}
+                        editing={editingCell?.clientId === c.clientId && editingCell.field === "se"}
+                        onEdit={() => setEditingCell({ clientId: c.clientId, field: "se" })}
+                        onCancel={() => setEditingCell(null)}
+                        onChange={(v) => handleAssignChange(c.clientId, "se", v)}
+                      />
+                    </td>
                     <td className="px-3 py-2.5"><ClientStatusBadge status={c.status} /></td>
                     <td className="px-3 py-2.5"><HealthBadge health={c.health} /></td>
                     <td className="px-3 py-2.5"><FeedbackBadge status={c.feedbackStatus} /></td>
@@ -252,6 +279,40 @@ export default function AdminClientsView() {
   )
 }
 
+
+function AssignCell({
+  value, options, editing, onEdit, onCancel, onChange,
+}: {
+  value: string
+  options: string[]
+  editing: boolean
+  onEdit: () => void
+  onCancel: () => void
+  onChange: (v: string) => void
+}) {
+  if (editing) {
+    return (
+      <Select defaultOpen value={value} onValueChange={onChange} onOpenChange={(open) => { if (!open) onCancel() }}>
+        <SelectTrigger className="h-7 w-36 text-xs"><SelectValue placeholder="Select..." /></SelectTrigger>
+        <SelectContent>
+          {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    )
+  }
+  return (
+    <div className="flex items-center gap-1 group">
+      <span>{value || "—"}</span>
+      <button
+        onClick={onEdit}
+        className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-[#1e3a5f] transition-opacity shrink-0"
+        title="Change assignment"
+      >
+        <Pencil className="h-3 w-3" />
+      </button>
+    </div>
+  )
+}
 
 function FilterSelect({ value, onChange, placeholder, options }: { value: string; onChange: (v: string) => void; placeholder: string; options: string[] }) {
   return (
