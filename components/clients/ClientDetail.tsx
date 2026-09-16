@@ -11,10 +11,13 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { formatDate, daysSince, cn } from "@/lib/utils"
+import { formatDate, daysSince, parseFlexDate, cn } from "@/lib/utils"
 import { RESOLUTION_STATUS_OPTIONS } from "@/constants"
 import type { FeedbackEntry } from "@/types/feedback"
+import type { Enquiry } from "@/types/guidance"
 import { ExternalLink, MessageSquare, CalendarPlus, FileText, Star, ChevronDown, ChevronUp, Plus, Activity, Pencil } from "lucide-react"
+
+const ENQUIRIES_SINCE = new Date(2026, 5, 29) // 29 Jun 2026
 
 interface Props {
   client: Client
@@ -41,6 +44,16 @@ export function ClientDetail({ client, onUpdated }: Props) {
       setResolutionStatus("") // clear local selection so the refreshed value from the query drives the display
     },
   })
+
+  const { data: allEnquiries = [] } = useQuery<Enquiry[]>({
+    queryKey: ["enquiries"],
+    queryFn: () => fetch("/api/enquiries").then((r) => r.json()),
+  })
+  const enquiriesSince = (Array.isArray(allEnquiries) ? allEnquiries : []).filter((e) => {
+    if (e.clientCode !== client.clientId) return false
+    const d = parseFlexDate(e.enquiryDate)
+    return d !== null && d >= ENQUIRIES_SINCE
+  }).length
 
   const { data: momEntries = [], isLoading: momLoading } = useQuery<any[]>({
     queryKey: ["mom", client.clientId],
@@ -131,6 +144,7 @@ export function ClientDetail({ client, onUpdated }: Props) {
         <InfoCell label="Last Feedback" value={formatDate(client.lastFeedbackDate)} highlight={days !== null && days > 7} />
         <InfoCell label="Days Since" value={days !== null ? `${days}d` : "—"} highlight={days !== null && days > 7} />
         <InfoCell label="Next Follow-up" value={formatDate(client.nextFollowup)} />
+        <InfoCell label="Enquiries (since 29 Jun 2026)" value={String(enquiriesSince)} />
       </div>
 
       {/* Log Feedback */}
