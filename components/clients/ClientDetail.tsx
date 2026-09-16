@@ -1,8 +1,10 @@
 "use client"
 import { useState, useMemo } from "react"
+import { useSession } from "next-auth/react"
 import type { Client } from "@/types/client"
 import { useMeetings } from "@/hooks/useMeetings"
 import { useTasks } from "@/hooks/useTasks"
+import { useUpdateClient } from "@/hooks/useClients"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { HealthDot } from "@/components/shared/HealthDot"
 import { HealthBadge, FeedbackBadge, ClientStatusBadge } from "@/components/shared/StatusBadge"
@@ -12,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { formatDate, daysSince, parseFlexDate, cn } from "@/lib/utils"
-import { RESOLUTION_STATUS_OPTIONS } from "@/constants"
+import { RESOLUTION_STATUS_OPTIONS, STATUS_OPTIONS } from "@/constants"
 import type { FeedbackEntry } from "@/types/feedback"
 import type { Enquiry } from "@/types/guidance"
 import { ExternalLink, MessageSquare, CalendarPlus, FileText, Star, ChevronDown, ChevronUp, Plus, Activity, Pencil } from "lucide-react"
@@ -25,6 +27,9 @@ interface Props {
 }
 
 export function ClientDetail({ client, onUpdated }: Props) {
+  const { data: session } = useSession()
+  const canChangeStatus = session?.user?.role === "Admin" || session?.user?.role === "KAM"
+  const updateClient = useUpdateClient()
   const [showMOM, setShowMOM] = useState(false)
   const [showTimeline, setShowTimeline] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
@@ -116,6 +121,11 @@ export function ClientDetail({ client, onUpdated }: Props) {
 
   const days = daysSince(client.lastFeedbackDate)
 
+  const handleStatusChange = async (status: string) => {
+    await updateClient.mutateAsync({ id: client.clientId, status })
+    onUpdated({ ...client, status })
+  }
+
   return (
     <div className="p-5 space-y-4">
       {/* Header */}
@@ -124,10 +134,23 @@ export function ClientDetail({ client, onUpdated }: Props) {
           <HealthDot health={client.health} className="h-3.5 w-3.5" />
           <h2 className="text-xl font-bold text-[#1e3a5f]">{client.company}</h2>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant="gray">{client.clientId}</Badge>
           {client.industry && <Badge variant="gray">{client.industry}</Badge>}
-          <ClientStatusBadge status={client.status} />
+          {canChangeStatus ? (
+            <Select value={client.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="h-6 w-auto gap-1 border-none bg-transparent p-0 text-xs [&>svg]:h-3 [&>svg]:w-3">
+                <SelectValue>
+                  <ClientStatusBadge status={client.status} />
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : (
+            <ClientStatusBadge status={client.status} />
+          )}
           <HealthBadge health={client.health} />
           <FeedbackBadge status={client.feedbackStatus} />
           {client.overdue === "YES" && <Badge variant="red">Overdue</Badge>}
