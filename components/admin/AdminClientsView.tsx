@@ -57,7 +57,7 @@ export default function AdminClientsView() {
       if (filterStatus !== "All" && c.status !== filterStatus) return false
       if (filterHealth !== "All" && c.health !== filterHealth) return false
       if (filterFeedback !== "All" && c.feedbackStatus !== filterFeedback) return false
-      if (search && !c.company.toLowerCase().includes(search.toLowerCase())) return false
+      if (search && !c.company.toLowerCase().includes(search.toLowerCase()) && !c.clientId.toLowerCase().includes(search.toLowerCase())) return false
       if (startDateFrom || startDateTo) {
         const d = parseFlexDate(c.startDate)
         if (!d || isNaN(d.getTime())) return false
@@ -105,7 +105,7 @@ export default function AdminClientsView() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap gap-2">
-        <Input placeholder="Search company..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 w-48 text-xs" />
+        <Input placeholder="Search company or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 w-48 text-xs" />
         <FilterSelect value={filterKam} onChange={setFilterKam} placeholder="All KAMs" options={kamNames} />
         <FilterSelect value={filterStatus} onChange={setFilterStatus} placeholder="All Statuses" options={STATUS_OPTIONS.filter((s) => !ARCHIVED_STATUSES.includes(s))} />
         <FilterSelect value={filterHealth} onChange={setFilterHealth} placeholder="All Health" options={[...HEALTH_OPTIONS]} />
