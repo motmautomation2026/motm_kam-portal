@@ -7,7 +7,8 @@ import { useTasks } from "@/hooks/useTasks"
 import { useUpdateClient } from "@/hooks/useClients"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { HealthDot } from "@/components/shared/HealthDot"
-import { HealthBadge, FeedbackBadge, ClientStatusBadge } from "@/components/shared/StatusBadge"
+import { HealthBadge, FeedbackBadge, ClientStatusBadge, clientStatusVariant } from "@/components/shared/StatusBadge"
+import { badgeVariants } from "@/components/ui/badge"
 import { LogFeedbackModal } from "@/components/shared/LogFeedbackModal"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -139,10 +140,13 @@ export function ClientDetail({ client, onUpdated }: Props) {
           {client.industry && <Badge variant="gray">{client.industry}</Badge>}
           {canChangeStatus ? (
             <Select value={client.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-6 w-auto gap-1 border-none bg-transparent p-0 text-xs [&>svg]:h-3 [&>svg]:w-3">
-                <SelectValue>
-                  <ClientStatusBadge status={client.status} />
-                </SelectValue>
+              <SelectTrigger
+                className={cn(
+                  badgeVariants({ variant: clientStatusVariant(client.status) }),
+                  "h-auto w-auto gap-1 border-none shadow-none cursor-pointer [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70",
+                )}
+              >
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}

@@ -18,7 +18,7 @@ function feedbackVariant(status: string): BadgeProps["variant"] {
   return "gray"
 }
 
-function clientStatusVariant(status: string): BadgeProps["variant"] {
+export function clientStatusVariant(status: string): BadgeProps["variant"] {
   if (status === "E. Started" || status === "C. Started") return "green"
   if (status === "New" || status === "Resume Activity") return "blue"
   if (status === "Closed" || status === "On Notice") return "red"
