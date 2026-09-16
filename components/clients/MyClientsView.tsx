@@ -12,9 +12,16 @@ import { cn } from "@/lib/utils"
 const PIN_LIMIT = 5
 const STORAGE_KEY = "motm-pinned"
 
-export default function MyClientsView() {
-  const { data: clients, isLoading } = useClients()
-  const { data: archivedClients = [] } = useArchivedClients()
+interface Props {
+  /** When set (Admin viewing a specific KAM's dashboard), only that KAM's clients are shown. */
+  kamName?: string
+}
+
+export default function MyClientsView({ kamName }: Props) {
+  const { data: allClients, isLoading } = useClients()
+  const { data: allArchivedClients = [] } = useArchivedClients()
+  const clients = kamName ? allClients?.filter((c) => c.kam === kamName) : allClients
+  const archivedClients = kamName ? allArchivedClients.filter((c) => c.kam === kamName) : allArchivedClients
   const trends = useHealthTrends()
   const [selected, setSelected] = useState<Client | null>(null)
   const [showDetail, setShowDetail] = useState(false)

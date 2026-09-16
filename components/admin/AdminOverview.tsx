@@ -9,6 +9,7 @@ import { formatDate, daysSince, parseFlexDate } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
+import Link from "next/link"
 import { Label } from "@/components/ui/label"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { FeedbackHistoryModal } from "@/components/shared/FeedbackHistoryModal"
@@ -83,7 +84,9 @@ export default function AdminOverview() {
         {open.kam && <div className="grid grid-cols-3 gap-3">
           {kamBreakdown.map((k) => (
             <div key={k.kam} className="bg-white rounded-xl border border-slate-200 p-4">
-              <div className="font-semibold text-slate-800 mb-2">{k.kam}</div>
+              <Link href={`/admin/kam/${encodeURIComponent(k.kam)}`} className="font-semibold text-slate-800 mb-2 hover:underline hover:text-[#0369a1] block">
+                {k.kam}
+              </Link>
               <div className="grid grid-cols-4 gap-2 text-center text-xs">
                 <KAMStat label="Total" value={k.total} color="text-slate-700" onClick={() => openFilter(`${k.kam} — All`, (c) => c.kam === k.kam && !INACTIVE.includes(c.status))} />
                 <KAMStat label="Green" value={k.green} color="text-green-600" onClick={() => openFilter(`${k.kam} — Green`, (c) => c.kam === k.kam && !INACTIVE.includes(c.status) && c.health === "Green")} />
