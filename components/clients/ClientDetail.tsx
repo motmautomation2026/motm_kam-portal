@@ -41,6 +41,7 @@ export function ClientDetail({ client, onUpdated }: Props) {
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [showQuickUpdate, setShowQuickUpdate] = useState(false)
   const [showMOM, setShowMOM] = useState(false)
   const [showTimeline, setShowTimeline] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
@@ -197,59 +198,68 @@ export function ClientDetail({ client, onUpdated }: Props) {
 
       {/* Quick Update */}
       <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-slate-50">
-        <h3 className="text-sm font-semibold text-slate-700">Quick Update</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs">Status</Label>
-            <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Health</Label>
-            <Select value={form.health} onValueChange={(v) => setForm((f) => ({ ...f, health: v }))}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {HEALTH_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Feedback Status</Label>
-            <Select value={form.feedbackStatus} onValueChange={(v) => setForm((f) => ({ ...f, feedbackStatus: v }))}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FEEDBACK_STATUS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Next Follow-up</Label>
-            <input
-              type="date"
-              value={form.nextFollowup}
-              onChange={(e) => setForm((f) => ({ ...f, nextFollowup: e.target.value }))}
-              className="flex h-8 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e3a5f]"
-            />
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">KAM Notes</Label>
-          <Textarea
-            value={form.kamNotes}
-            onChange={(e) => setForm((f) => ({ ...f, kamNotes: e.target.value }))}
-            className="min-h-[60px] text-xs"
-            placeholder="Internal notes..."
-          />
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : saved ? "Saved ✓" : "Save"}
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-700">Quick Update</h3>
+          <Button size="sm" variant="outline" onClick={() => setShowQuickUpdate((v) => !v)}>
+            {showQuickUpdate ? "Hide" : "Quick Update"}
           </Button>
         </div>
+        {showQuickUpdate && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Health</Label>
+                <Select value={form.health} onValueChange={(v) => setForm((f) => ({ ...f, health: v }))}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {HEALTH_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Feedback Status</Label>
+                <Select value={form.feedbackStatus} onValueChange={(v) => setForm((f) => ({ ...f, feedbackStatus: v }))}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FEEDBACK_STATUS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Next Follow-up</Label>
+                <input
+                  type="date"
+                  value={form.nextFollowup}
+                  onChange={(e) => setForm((f) => ({ ...f, nextFollowup: e.target.value }))}
+                  className="flex h-8 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e3a5f]"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">KAM Notes</Label>
+              <Textarea
+                value={form.kamNotes}
+                onChange={(e) => setForm((f) => ({ ...f, kamNotes: e.target.value }))}
+                className="min-h-[60px] text-xs"
+                placeholder="Internal notes..."
+              />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? "Saving..." : saved ? "Saved ✓" : "Save"}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Log Feedback */}
