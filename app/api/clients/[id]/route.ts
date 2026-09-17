@@ -141,5 +141,16 @@ export async function DELETE(
     console.error("[clients DELETE] failed to remove mirrored Active sheet row", err)
   }
 
+  // Same for the "Companies sample data" sheet.
+  try {
+    const sampleRows = await getSheetValues(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE)
+    const sampleRowIndex = sampleRows.findIndex((r) => r[0] === id)
+    if (sampleRowIndex !== -1) {
+      await deleteRow(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE, sampleRowIndex + 1)
+    }
+  } catch (err) {
+    console.error("[clients DELETE] failed to remove mirrored Companies sample data row", err)
+  }
+
   return NextResponse.json({ success: true })
 }
