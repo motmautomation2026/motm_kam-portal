@@ -246,7 +246,13 @@ export default function CSDashboard() {
         />
       )}
 
-      {csEditTarget && <EditCompanyModal company={csEditTarget} onClose={() => setCsEditTarget(null)} />}
+      {csEditTarget && (
+        <EditCompanyModal
+          company={csEditTarget}
+          client={clients?.find((c) => c.clientId === csEditTarget.clientCode)}
+          onClose={() => setCsEditTarget(null)}
+        />
+      )}
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">

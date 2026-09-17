@@ -63,6 +63,8 @@ export async function PATCH(
           contractValue: c.CONTRACT_VALUE + 1,
           monthlyValue: c.MONTHLY_VALUE + 1,
           services: c.SERVICES + 1,
+          sheetId: c.SHEET_ID + 1,
+          dashboardId: c.DASHBOARD_ID + 1,
         }
       : {}),
   }
