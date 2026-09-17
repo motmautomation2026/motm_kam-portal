@@ -6,6 +6,7 @@ export function useClients() {
   return useQuery<Client[]>({
     queryKey: ["clients"],
     queryFn: () => fetch("/api/clients").then((r) => r.json()),
+    refetchInterval: 20_000,
   })
 }
 
@@ -26,6 +27,28 @@ export function useUpdateClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       }).then((r) => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
+  })
+}
+
+export function useCreateClient() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Record<string, string>) =>
+      fetch("/api/clients/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then((r) => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
+  })
+}
+
+export function useDeleteClient() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/clients/${id}`, { method: "DELETE" }).then((r) => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
   })
 }

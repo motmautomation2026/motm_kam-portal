@@ -15,7 +15,7 @@ export async function GET() {
 
     const INACTIVE = ["Closed", "Uncountable"]
     const filtered =
-      session.user.role === "Admin"
+      session.user.role === "Admin" || session.user.role === "Customer Success"
         ? data.filter((c) => !INACTIVE.includes(c.status))
         : session.user.role === "SE"
         ? data.filter((c) => c.se === session.user.fullName && !INACTIVE.includes(c.status))

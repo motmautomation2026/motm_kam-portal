@@ -5,6 +5,7 @@ const VALID_CODES = () => [
   process.env.GATE_CODE_KAM,
   process.env.GATE_CODE_SE,
   process.env.GATE_CODE_DR,
+  process.env.GATE_CODE_CS,
 ].filter(Boolean) as string[]
 
 // In-memory rate limiter: max 10 failed attempts per IP per 15 minutes (C-3)

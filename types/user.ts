@@ -12,7 +12,7 @@ export interface SessionUser {
   email: string
   name: string
   image?: string
-  role: "Admin" | "KAM" | "SE" | "DR"
+  role: "Admin" | "KAM" | "SE" | "DR" | "Customer Success"
   kamName: string
   fullName: string
 }

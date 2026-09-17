@@ -8,5 +8,6 @@ export default async function DashboardPage() {
   if (!session) redirect("/login")
   if (session.user.role === "SE") redirect("/dashboard/se")
   if (session.user.role === "DR") redirect("/dashboard/dr")
+  if (session.user.role === "Customer Success") redirect("/dashboard/cs")
   return <MyClientsView />
 }

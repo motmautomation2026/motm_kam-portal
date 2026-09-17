@@ -82,6 +82,26 @@ export async function batchUpdate(
   })
 }
 
+/** Permanently delete a single row (1-indexed, including header) from a sheet tab. */
+export async function deleteRow(sheetId: string, sheetName: string, rowNum: number): Promise<void> {
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: sheetId })
+  const gid = meta.data.sheets?.find((s) => s.properties?.title === sheetName)?.properties?.sheetId
+  if (gid == null) throw new Error(`Sheet not found: ${sheetName}`)
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: sheetId,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: { sheetId: gid, dimension: "ROWS", startIndex: rowNum - 1, endIndex: rowNum },
+          },
+        },
+      ],
+    },
+  })
+}
+
 export function colToLetter(col: number): string {
   let result = ""
   while (col > 0) {

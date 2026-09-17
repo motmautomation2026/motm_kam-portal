@@ -39,6 +39,10 @@ const DR_TABS = [
   { label: "Tasks", href: "/dashboard/tasks" },
 ]
 
+const CS_TABS = [
+  { label: "Companies", href: "/dashboard/cs" },
+]
+
 export function NavTabs() {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -49,6 +53,8 @@ export function NavTabs() {
     ? SE_TABS
     : role === "DR"
     ? DR_TABS
+    : role === "Customer Success"
+    ? CS_TABS
     : KAM_TABS
 
   return (
