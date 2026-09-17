@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getSheetValues, appendRow } from "@/lib/sheets"
-import { SHEET_ID, SHEETS, COLS, STATUS_OPTIONS } from "@/constants"
+import { SHEET_ID, SHEETS, COLS, STATUS_OPTIONS, TESTSHEET_ID, TEST_SHEETS } from "@/constants"
+import { CS_ACTIVE_FIELDS } from "@/constants/csActiveFields"
 import { esc, nowIST } from "@/lib/utils"
 
 const STATUS_SET = new Set<string>(STATUS_OPTIONS)
@@ -60,6 +61,21 @@ export async function POST(req: NextRequest) {
     "",                                                // X Sheet ID
     "",                                                // Y Dashboard ID
   ])
+
+  // Also record this company in the Customer Success spreadsheet's "Active" tab,
+  // keyed by the same Client Code. Best-effort: if that sheet is unreachable, the
+  // Client Master row above has already been created successfully, so don't fail
+  // the whole request over it.
+  try {
+    const maxCol = Math.max(...CS_ACTIVE_FIELDS.map((f) => f.col))
+    const csRow: string[] = new Array(maxCol + 1).fill("")
+    csRow[CS_ACTIVE_FIELDS.find((f) => f.key === "status")!.col] = esc(status)
+    csRow[CS_ACTIVE_FIELDS.find((f) => f.key === "clientCode")!.col] = esc(clientId)
+    csRow[CS_ACTIVE_FIELDS.find((f) => f.key === "clientName")!.col] = esc(company)
+    await appendRow(TESTSHEET_ID, TEST_SHEETS.ACTIVE, csRow)
+  } catch (err) {
+    console.error("[clients create] failed to mirror into Active sheet", err)
+  }
 
   return NextResponse.json({ success: true })
 }

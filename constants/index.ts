@@ -1,5 +1,7 @@
 export const SHEET_ID = process.env.SHEET_ID!
 export const ENQUIRY_SHEET_ID = process.env.ENQUIRY_SHEET_ID!
+// Separate spreadsheet used only by the Customer Success dashboard — independent of Client Master.
+export const TESTSHEET_ID = process.env.TESTSHEET_ID!
 
 
 // Do NOT export GCHAT_WEBHOOK_URL here — it would risk inclusion in client bundles.
@@ -59,6 +61,12 @@ export const SHEETS = {
   ENQUIRY_TRACKER: "Enquiry Tracker",
   LEAD_QUALIFICATION: "Lead Qualification",
   EMAIL_RESPONSE_LOG: "Email Response Log",
+} as const
+
+// Tabs in the separate Customer Success spreadsheet (TESTSHEET_ID)
+export const TEST_SHEETS = {
+  ACTIVE: "Active",
+  COMPANIES_SAMPLE: "Companies sample data",
 } as const
 
 // Column indices (0-based) for each sheet

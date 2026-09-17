@@ -6,7 +6,9 @@ import type { Target } from "@/types/target"
 import type { AdminNote, Enquiry, LeadQual } from "@/types/guidance"
 import type { Notification } from "@/types/notification"
 import type { AppUser } from "@/types/user"
+import type { CSCompany } from "@/types/csCompany"
 import { COLS } from "@/constants"
+import { CS_ACTIVE_FIELDS } from "@/constants/csActiveFields"
 
 const g = (row: string[], i: number) => row[i] ?? ""
 
@@ -205,6 +207,12 @@ export function parseLeadQual(row: string[], rowNum: number): LeadQual {
     notes: g(row, c.NOTES),
     submittedBy: g(row, c.SUBMITTED_BY),
   }
+}
+
+export function parseCSCompany(row: string[], rowNum: number): CSCompany {
+  const obj: Record<string, string> = {}
+  for (const f of CS_ACTIVE_FIELDS) obj[f.key] = g(row, f.col)
+  return { rowNum, ...obj } as CSCompany
 }
 
 export function parseEnquiry(row: string[], enquiryKey: string): Omit<Enquiry, "status" | "trackerNote" | "updatedBy" | "updatedAt"> {
