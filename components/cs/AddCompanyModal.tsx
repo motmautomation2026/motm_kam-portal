@@ -32,6 +32,8 @@ export default function AddCompanyModal({ onClose, onCreated }: AddCompanyModalP
     contractValue: "",
     monthlyValue: "",
     services: "",
+    dataSheetLink: "",
+    dashboardUrl: "",
   })
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -116,6 +118,12 @@ export default function AddCompanyModal({ onClose, onCreated }: AddCompanyModalP
           </Field>
           <Field label="Services">
             <Input value={form.services} onChange={(e) => set("services")(e.target.value)} />
+          </Field>
+          <Field label="Data Sheet Link">
+            <Input value={form.dataSheetLink} onChange={(e) => set("dataSheetLink")(e.target.value)} placeholder="https://docs.google.com/..." />
+          </Field>
+          <Field label="Dashboard URL">
+            <Input value={form.dashboardUrl} onChange={(e) => set("dashboardUrl")(e.target.value)} placeholder="https://..." />
           </Field>
         </div>
 

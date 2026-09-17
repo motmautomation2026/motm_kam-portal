@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
     esc(body.services ?? ""),                         // U Services
     "",                                                // V KAM Notes
     `Added by ${addedBy} (Customer Success) ${nowIST()}`, // W Assign Log
-    "",                                                // X Sheet ID
-    "",                                                // Y Dashboard ID
+    esc(body.dataSheetLink ?? ""),                    // X Sheet ID
+    esc(body.dashboardUrl ?? ""),                     // Y Dashboard ID
   ])
 
   // Also record this company in the Customer Success spreadsheet's "Active" tab,
@@ -75,6 +75,20 @@ export async function POST(req: NextRequest) {
     await appendRow(TESTSHEET_ID, TEST_SHEETS.ACTIVE, csRow)
   } catch (err) {
     console.error("[clients create] failed to mirror into Active sheet", err)
+  }
+
+  // Also record it in the "Companies sample data" tab (Client Code, Company Name,
+  // Dashboard URL, Data Sheet Link — the columns that exist there). Best-effort,
+  // same reasoning as the Active sheet mirror above.
+  try {
+    const sampleRow: string[] = new Array(9).fill("")
+    sampleRow[0] = esc(clientId)              // A Client code
+    sampleRow[1] = esc(company)               // B Company Name
+    sampleRow[7] = esc(body.dashboardUrl ?? "")   // H Dashborad URL
+    sampleRow[8] = esc(body.dataSheetLink ?? "")  // I Data Sheet Link
+    await appendRow(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE, sampleRow)
+  } catch (err) {
+    console.error("[clients create] failed to mirror into Companies sample data sheet", err)
   }
 
   return NextResponse.json({ success: true })
