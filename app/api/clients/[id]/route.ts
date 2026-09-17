@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getSheetValues, batchUpdate, colToLetter, deleteRow } from "@/lib/sheets"
 import { parseClient } from "@/lib/sheets-helpers"
-import { SHEET_ID, SHEETS, COLS } from "@/constants"
+import { SHEET_ID, SHEETS, COLS, TESTSHEET_ID, TEST_SHEETS } from "@/constants"
+import { CS_HEADER_ROWS, CS_CLIENT_CODE_COL } from "@/constants/csActiveFields"
 import { esc, nowIST } from "@/lib/utils"
 
 export async function PATCH(
@@ -96,6 +97,19 @@ export async function DELETE(
   if (rowIndex === -1) return NextResponse.json({ error: "Client not found" }, { status: 404 })
 
   await deleteRow(SHEET_ID, SHEETS.CLIENT_MASTER, rowIndex + 2)
+
+  // Also remove the mirrored row from the Customer Success "Active" sheet, if one
+  // exists there. Best-effort: the Client Master row above is already deleted, so
+  // don't fail the whole request if this sheet is unreachable.
+  try {
+    const csRows = await getSheetValues(TESTSHEET_ID, TEST_SHEETS.ACTIVE)
+    const csRowIndex = csRows.slice(CS_HEADER_ROWS).findIndex((r) => r[CS_CLIENT_CODE_COL] === id)
+    if (csRowIndex !== -1) {
+      await deleteRow(TESTSHEET_ID, TEST_SHEETS.ACTIVE, csRowIndex + CS_HEADER_ROWS + 1)
+    }
+  } catch (err) {
+    console.error("[clients DELETE] failed to remove mirrored Active sheet row", err)
+  }
 
   return NextResponse.json({ success: true })
 }
