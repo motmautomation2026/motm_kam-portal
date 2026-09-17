@@ -9,7 +9,12 @@ import { useKAMNames } from "@/hooks/useKAMNames"
 import { useSENames } from "@/hooks/useSENames"
 import { useCreateClient } from "@/hooks/useClients"
 
-export default function AddCompanyModal({ onClose }: { onClose: () => void }) {
+interface AddCompanyModalProps {
+  onClose: () => void
+  onCreated?: (data: { clientCode: string; clientName: string; status: string }) => void
+}
+
+export default function AddCompanyModal({ onClose, onCreated }: AddCompanyModalProps) {
   const { data: kamNames = [] } = useKAMNames()
   const { data: seNames = [] } = useSENames()
   const createClient = useCreateClient()
@@ -46,6 +51,7 @@ export default function AddCompanyModal({ onClose }: { onClose: () => void }) {
         setError(res.error)
         return
       }
+      onCreated?.({ clientCode: form.clientId, clientName: form.company, status: form.status })
       onClose()
     } finally {
       setSubmitting(false)

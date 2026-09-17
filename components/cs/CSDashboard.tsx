@@ -9,11 +9,21 @@ import { PageSpinner } from "@/components/shared/Spinner"
 import { STATUS_OPTIONS } from "@/constants"
 import { useKAMNames } from "@/hooks/useKAMNames"
 import { useSENames } from "@/hooks/useSENames"
-import { Plus, Pencil, Trash2, Check, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Check, X, FileText } from "lucide-react"
 import AddCompanyModal from "./AddCompanyModal"
+import EditCompanyModal from "./EditCompanyModal"
+import { useCSCompanies, useCreateCSCompany } from "@/hooks/useCSCompanies"
+import { CS_ACTIVE_FIELDS } from "@/constants/csActiveFields"
 import type { Client } from "@/types/client"
+import type { CSCompany } from "@/types/csCompany"
 
 type EditField = "company" | "status" | "kam" | "se" | "industry" | "city" | "contact" | "phone"
+
+function blankCSCompany(base: { clientCode: string; clientName: string; status: string }): CSCompany {
+  const obj: Record<string, string> = {}
+  for (const f of CS_ACTIVE_FIELDS) obj[f.key] = ""
+  return { rowNum: 0, ...obj, ...base } as CSCompany
+}
 
 export default function CSDashboard() {
   const { data: clients, isLoading } = useClients()
@@ -21,12 +31,33 @@ export default function CSDashboard() {
   const { data: seNames = [] } = useSENames()
   const updateClient = useUpdateClient()
   const deleteClient = useDeleteClient()
+  const { data: csCompanies } = useCSCompanies()
+  const createCSCompany = useCreateCSCompany()
 
   const [search, setSearch] = useState("")
   const [addOpen, setAddOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Client | null>(null)
   const [editingCell, setEditingCell] = useState<{ clientId: string; field: EditField } | null>(null)
   const [draftValue, setDraftValue] = useState("")
+  const [csEditTarget, setCsEditTarget] = useState<CSCompany | null>(null)
+
+  const csByCode = useMemo(() => {
+    const m = new Map<string, CSCompany>()
+    csCompanies?.forEach((c) => m.set(c.clientCode, c))
+    return m
+  }, [csCompanies])
+
+  // Opens the full "Active" sheet form for a company. If it isn't mirrored into that
+  // sheet yet (e.g. it was created before this sheet existed), create it there first.
+  const openActiveSheetForm = async (c: Client) => {
+    const existing = csByCode.get(c.clientId)
+    if (existing) {
+      setCsEditTarget(existing)
+      return
+    }
+    await createCSCompany.mutateAsync({ status: c.status, clientCode: c.clientId, clientName: c.company })
+    setCsEditTarget(blankCSCompany({ clientCode: c.clientId, clientName: c.company, status: c.status }))
+  }
 
   const filtered = useMemo(() => {
     if (!clients) return []
@@ -192,9 +223,14 @@ export default function CSDashboard() {
                     />
                   </td>
                   <td className="px-3 py-2.5">
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-slate-400 hover:text-red-600" onClick={() => setConfirmDelete(c)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openActiveSheetForm(c)} title="Fill full details in the Active sheet">
+                        <FileText className="h-3.5 w-3.5 mr-1" /> Active Sheet
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-slate-400 hover:text-red-600" onClick={() => setConfirmDelete(c)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -203,7 +239,14 @@ export default function CSDashboard() {
         </div>
       </div>
 
-      {addOpen && <AddCompanyModal onClose={() => setAddOpen(false)} />}
+      {addOpen && (
+        <AddCompanyModal
+          onClose={() => setAddOpen(false)}
+          onCreated={(data) => setCsEditTarget(blankCSCompany(data))}
+        />
+      )}
+
+      {csEditTarget && <EditCompanyModal company={csEditTarget} onClose={() => setCsEditTarget(null)} />}
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
