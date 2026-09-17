@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { getSheetValues, batchUpdate, colToLetter, deleteRow } from "@/lib/sheets"
+import { getSheetValues, batchUpdate, colToLetter, deleteRow, appendRow, updateCell } from "@/lib/sheets"
 import { parseClient } from "@/lib/sheets-helpers"
 import { SHEET_ID, SHEETS, COLS, TESTSHEET_ID, TEST_SHEETS } from "@/constants"
 import { CS_HEADER_ROWS, CS_CLIENT_CODE_COL } from "@/constants/csActiveFields"
@@ -78,6 +78,34 @@ export async function PATCH(
 
   if (updates.length > 0) {
     await batchUpdate(SHEET_ID, updates)
+  }
+
+  // Keep "Companies sample data" in sync whenever the Data Sheet Link / Dashboard URL
+  // change, since that sheet has its own copy of those two columns. Best-effort: the
+  // Client Master update above already succeeded, so a problem here shouldn't fail it.
+  if (body.sheetId !== undefined || body.dashboardId !== undefined) {
+    try {
+      const sampleRows = await getSheetValues(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE)
+      const sampleRowIndex = sampleRows.findIndex((r) => r[0] === id)
+      if (sampleRowIndex !== -1) {
+        const sampleRowNum = sampleRowIndex + 1
+        if (body.dashboardId !== undefined) {
+          await updateCell(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE, sampleRowNum, 8, esc(String(body.dashboardId)))
+        }
+        if (body.sheetId !== undefined) {
+          await updateCell(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE, sampleRowNum, 9, esc(String(body.sheetId)))
+        }
+      } else {
+        const sampleRow: string[] = new Array(9).fill("")
+        sampleRow[0] = esc(id)
+        sampleRow[1] = esc(client.company)
+        sampleRow[7] = esc(String(body.dashboardId ?? ""))
+        sampleRow[8] = esc(String(body.sheetId ?? ""))
+        await appendRow(TESTSHEET_ID, TEST_SHEETS.COMPANIES_SAMPLE, sampleRow)
+      }
+    } catch (err) {
+      console.error("[clients PATCH] failed to sync Companies sample data sheet", err)
+    }
   }
 
   return NextResponse.json({ success: true })
